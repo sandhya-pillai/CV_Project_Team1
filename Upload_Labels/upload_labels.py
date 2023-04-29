@@ -1,6 +1,5 @@
 import labelbox as lb
 import uuid
-from test_label import sample_label
 import argparse
 import json
 import os
