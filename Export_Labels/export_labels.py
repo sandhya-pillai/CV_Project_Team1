@@ -46,7 +46,7 @@ class ExportLabel(object):
         print("Labels skipped to convert to datarows..", len(labels)-len(datarows))
         return datarows       
 
-    def pull_frames(self, video_link, frame_exclusions=[]):
+    def pull_frames(self, video_link, frame_exclusions=[], last_frame_number=float("inf")):
         '''
         input: a video link and frame exclusions which are frame numbers that are not supposed to be saved (for purpose of missing annotations)
         returns: a list of images as numpy arrays
@@ -57,7 +57,7 @@ class ExportLabel(object):
         images = []
         frame_count = 1
         while success:
-            if frame_count not in frame_exclusions:
+            if frame_count not in frame_exclusions and frame_count<=last_frame_number:
                 images.append(image)
             success, image = vidcap.read()
             frame_count += 1
@@ -106,10 +106,36 @@ class ExportLabel(object):
                 feature_id = a_object["featureId"]
                 classification_number = class_ref.index(class_dict[feature_id])
                 bbox = a_object["bbox"]
-                yolo_label_string += str(classification_number)+ " " + str(bbox["top"]) + " " + str(bbox["left"]) + " " + str(bbox["width"]) + " " + str(bbox["height"])
+                yolo_label_string += str(classification_number)+ " " + str(bbox["top"]) + " " + str(bbox["left"]) + " " + str(bbox["height"]) + " " + str(bbox["width"])
                 yolo_label_string += "\n"
+            yolo_label_string = yolo_label_string.strip()
             yolo_annotations.append((str(datarow_id), yolo_label_string))
-        return yolo_annotations, frame_exclusions
+        return yolo_annotations, frame_exclusions, frame_number
+
+    def center_and_normalize_annotations(self, images, annotations):
+        '''
+        input: list of numpy array (images), annotations dictionary
+        returns: annotations dictionary with x, y as the center of the bounding box instead of the top left corner and normalized by height and width 
+        '''
+        if len(images)!=len(annotations):
+            raise Exception("images size "+str(len(images))+" and annotations length "+str(len(annotations))+" do not match")
+        image_index = 0
+        for i in range(len(annotations)):
+            # get bounding boxes of a frame
+            datarow_id, yolo_label_string = annotations[i]
+            yolo_label_string = yolo_label_string.split("\n")
+            new_label_string = ""
+            for label in yolo_label_string:
+                class_number, top, left, height, width = label.split(" ")
+                img_height, img_width = images[image_index].shape[:2]
+                top, left, height, width = float(top)/img_height, float(left)/img_width, float(height)/img_height, float(width)/img_width
+                top, left = (top+(height/2)), (left+(width/2))
+                new_label_string += str(class_number)+ " " + str(top) + " " + str(left) + " " + str(height) + " " + str(width)
+                new_label_string += "\n"
+            new_label_string = new_label_string.strip()
+            annotations[i] = (datarow_id, new_label_string)
+            image_index+=1
+        return annotations
 
     def run(self):
         '''
@@ -129,19 +155,23 @@ class ExportLabel(object):
             class_dict = self.build_class_dict(datarow["annotations"])
             
             # get annotations and exclusions
-            yolo_annotations, frame_exclusions = self.build_yolo_annotations(datarow, class_dict)
+            yolo_annotations, frame_exclusions, last_frame_number = self.build_yolo_annotations(datarow, class_dict)
 
             # get decomposed frames as a set of images
-            images = self.pull_frames(datarow["video_url"], frame_exclusions)
+            images = self.pull_frames(datarow["video_url"], frame_exclusions, last_frame_number)
 
+            normalized_yolo_annotations = self.center_and_normalize_annotations(images, yolo_annotations)
+
+            if isinstance(normalized_yolo_annotations, int):
+                print(normalized_yolo_annotations)
             #get the permutations of locations to save
-            permutations = af.make_permutations(len(yolo_annotations), [0, 1], [1-self.train_split, self.train_split])
+            permutations = af.make_permutations(len(normalized_yolo_annotations), [0, 1], [1-self.train_split, self.train_split])
 
             # only move forward if the length of images and labels are the same else discard the data row
             if len(images)==len(yolo_annotations):
                 images_paths = af.shuffle_dir([self.destination_path+"/images/test", self.destination_path+"/images/train"], permutations)
                 label_paths = af.shuffle_dir([self.destination_path+"/labels/test", self.destination_path+"/labels/train"], permutations)
-                af.write_yolo_annotations(label_paths, yolo_annotations)
+                af.write_yolo_annotations(label_paths, normalized_yolo_annotations)
                 result = af.save_frames(images, images_paths, datarow["Datarow_ID"])
             
             # save status in a dict if it fails, for now it is only used to find the number of failures
