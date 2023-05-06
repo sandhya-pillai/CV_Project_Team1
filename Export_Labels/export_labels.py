@@ -85,7 +85,7 @@ class ExportLabel(object):
         '''
         input: [annotations], {class_dict<featureId,classification>}
         returns: a list of annotations (tuples where each tuple is < Datarow_ID , yolo_label_string >) and 
-            a list of frame numbers that do not have any annotations attached
+            a list of frame numbers that do not have any annotations attached, last frame number to get the last annotation vs the frame in the video
         '''
         yolo_annotations = []
         datarow_id = datarow["Datarow_ID"]
@@ -94,6 +94,7 @@ class ExportLabel(object):
         frame_count = 1
         class_ref = self.classification_ref["names"]
         class_ref = [c.lower() for c in class_ref]
+        frame_number = 0
         for annotation in annotations:
             frame_number = annotation["frameNumber"]
             if frame_number!=frame_count:
@@ -117,8 +118,6 @@ class ExportLabel(object):
         input: list of numpy array (images), annotations dictionary
         returns: annotations dictionary with x, y as the center of the bounding box instead of the top left corner and normalized by height and width 
         '''
-        if len(images)!=len(annotations):
-            raise Exception("images size "+str(len(images))+" and annotations length "+str(len(annotations))+" do not match")
         image_index = 0
         for i in range(len(annotations)):
             # get bounding boxes of a frame
@@ -160,15 +159,13 @@ class ExportLabel(object):
             # get decomposed frames as a set of images
             images = self.pull_frames(datarow["video_url"], frame_exclusions, last_frame_number)
 
-            normalized_yolo_annotations = self.center_and_normalize_annotations(images, yolo_annotations)
-
-            if isinstance(normalized_yolo_annotations, int):
-                print(normalized_yolo_annotations)
-            #get the permutations of locations to save
-            permutations = af.make_permutations(len(normalized_yolo_annotations), [0, 1], [1-self.train_split, self.train_split])
-
             # only move forward if the length of images and labels are the same else discard the data row
             if len(images)==len(yolo_annotations):
+                normalized_yolo_annotations = self.center_and_normalize_annotations(images, yolo_annotations)
+                
+                #get the permutations of locations to save
+                permutations = af.make_permutations(len(normalized_yolo_annotations), [0, 1], [1-self.train_split, self.train_split])
+                
                 images_paths = af.shuffle_dir([self.destination_path+"/images/test", self.destination_path+"/images/train"], permutations)
                 label_paths = af.shuffle_dir([self.destination_path+"/labels/test", self.destination_path+"/labels/train"], permutations)
                 af.write_yolo_annotations(label_paths, normalized_yolo_annotations)
