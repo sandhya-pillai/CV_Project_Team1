@@ -164,8 +164,7 @@ def run(
             # Apply NMS
             pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
             dt[2] += time_sync() - t3
-            with open('output_print_log.txt' ,'a') as op:
-                    op.write('\n video name :'+ Path(path[0]).name)
+            
             # Process detections
             for i, det in enumerate(pred):  # detections per image
                 seen += 1
@@ -174,6 +173,8 @@ def run(
                     p = Path(p)  # to Path
                     s += f'{i}: '
                     global_key=txt_file_name = p.name
+                    with open('output_print_log.txt' ,'a') as op:
+                        op.write('\n video name :'+global_key)
                     save_path = str(save_dir / p.name)  # im.jpg, vid.mp4, ...
                 else:
                     p, im0, _ = path, im0s.copy(), getattr(dataset, 'frame', 0)
@@ -182,6 +183,8 @@ def run(
                     if source.endswith(VID_FORMATS):
                         txt_file_name = p.stem
                         global_key= p.name
+                        with open('output_print_log.txt' ,'a') as op:
+                            op.write('\n video name :'+global_key)
                         save_path = str(save_dir / p.name)  # im.jpg, vid.mp4, ...
                     # folder with imgs
                     else:
