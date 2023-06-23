@@ -165,7 +165,7 @@ def run(
             pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
             dt[2] += time_sync() - t3
             with open('output_print_log.txt' ,'a') as op:
-                    op.write('\n video name :'+path[0].name)
+                    op.write('\n video name :'+ Path(path[0]).name)
             # Process detections
             for i, det in enumerate(pred):  # detections per image
                 seen += 1
