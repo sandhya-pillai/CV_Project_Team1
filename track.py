@@ -350,7 +350,7 @@ def run(
 
         #final json 
         if save_labelbox:       
-            with open(str(save_dir)+'/bbox_annotation_ndjson.json', "w") as outfile:
+            with open('bbox_annotation_ndjson.json', "w") as outfile:
                 json.dump(list(tracked.values()), outfile)
 
         with open(final_count_pt + '.txt', 'a') as f:
