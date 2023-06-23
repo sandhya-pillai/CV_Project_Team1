@@ -78,7 +78,7 @@ def run(
         classes_count = {0:[],1:[],2:[]}
         source = str(source)
         with open('output_print.log', 'a') as f:
-            f.write('\n file name',source)
+            f.write('\n file name' + source)
         
         save_img = not nosave and not source.endswith('.txt')  # save inference images
         is_file = Path(source).suffix[1:] in (VID_FORMATS)
