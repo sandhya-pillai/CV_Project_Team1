@@ -77,8 +77,9 @@ def run(
     for source in sources:
         classes_count = {0:[],1:[],2:[]}
         source = str(source)
-        print(source) #diagnosing which video caused assertion 
-        sys.stdout.flush()
+        with open('output_print.log', 'a') as f:
+            f.write('\n file name',source)
+        
         save_img = not nosave and not source.endswith('.txt')  # save inference images
         is_file = Path(source).suffix[1:] in (VID_FORMATS)
         is_url = source.lower().startswith(('rtsp://', 'rtmp://', 'http://', 'https://'))
