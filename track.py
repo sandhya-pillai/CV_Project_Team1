@@ -52,7 +52,7 @@ def run(
         device='',  # cuda device, i.e. 0 or 0,1,2,3 or cpu
         show_vid=False,  # show results
         save_txt=False,  # save results to *.txt
-        save_labelbox=False,  # save labelbox compliant trackings json file to *.json
+        save_labelbox=True,  # save labelbox compliant trackings json file to *.json
         save_conf=False,  # save confidences in --save-txt labels
         save_crop=False,  # save cropped prediction boxes
         save_vid=False,  # save confidences in --save-txt labels
