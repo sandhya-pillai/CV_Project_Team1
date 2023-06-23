@@ -164,7 +164,8 @@ def run(
             # Apply NMS
             pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
             dt[2] += time_sync() - t3
-
+            with open('output_print_log.txt' ,'a') as op:
+                    op.write('\n video name :'+path[0].name)
             # Process detections
             for i, det in enumerate(pred):  # detections per image
                 seen += 1
@@ -343,8 +344,7 @@ def run(
                     vid_writer[i].write(im0)
 
                 prev_frames[i] = curr_frames[i]
-                with open('output_print_log.txt' ,'a') as op:
-                    op.write('\n video name :'+global_key)
+                
 
         final_count_pt = str(save_dir)  + '/final_count.txt'
 
