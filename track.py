@@ -188,6 +188,8 @@ def run(
                         save_path = str(save_dir / p.name)  # im.jpg, vid.mp4, ...
                     # folder with imgs
                     else:
+                        with open('output_print_log.txt' ,'a') as op:
+                            op.write('\n video name :'+p.name)
                         global_key=txt_file_name = p.parent.name  # get folder name containing current img
                         save_path = str(save_dir / p.parent.name)  # im.jpg, vid.mp4, ...
                 curr_frames[i] = im0
