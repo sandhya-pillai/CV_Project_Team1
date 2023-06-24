@@ -173,8 +173,6 @@ def run(
                     p = Path(p)  # to Path
                     s += f'{i}: '
                     global_key=txt_file_name = p.name
-                    with open('output_print_log.txt' ,'a') as op:
-                        op.write('\n video name :'+global_key + str(prev_frames[i] or '')+ ' current frame '+ str(im0) or '')
                     save_path = str(save_dir / p.name)  # im.jpg, vid.mp4, ...
                 else:
                     p, im0, _ = path, im0s.copy(), getattr(dataset, 'frame', 0)
@@ -189,7 +187,7 @@ def run(
                     # folder with imgs
                     else:
                         with open('output_print_log.txt' ,'a') as op:
-                            op.write('\n video name :'+p.name+ ' previous frame '+ str(prev_frames[i] or '')+ ' current frame '+ str(im0) or '')
+                            op.write('\n video name :'+p.name+ ' previous frame '+ prev_frames[i]+ ' current frame '+ im0)
                         global_key=txt_file_name = p.parent.name  # get folder name containing current img
                         save_path = str(save_dir / p.parent.name)  # im.jpg, vid.mp4, ...
                 curr_frames[i] = im0
